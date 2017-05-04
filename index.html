@@ -1,0 +1,264 @@
+<html>
+  <head>
+    <title>Windows Phone</title>
+    <meta charset="UTF-8">
+    <style>
+@font-face {
+  font-family: SegoeWP;
+  src: local("Segoe WP"),
+       url(SegoeWPN.ttf);
+  font-weight: bold;
+}
+body {text-align:center;}
+canvas {margin-bottom: 0;position:relative;}
+#controls {width:480px;padding:0;margin:0 auto;background: black;height:80px;}
+#controls button {background:black;color:white;font-size:30px;margin:0;padding:10px;width:29%;border:none;}
+#controls img {
+	margin:0;
+	padding:0;
+	width:50px;
+	height: 50px;
+}
+#controls button:focus {
+	margin:0;
+	padding:0;
+	border:1px solid white;
+}
+
+#browser {
+	display:none;
+	width:460px;
+	height:700px;
+	background:black;
+	position:fixed;
+	top:100px;
+	margin:0 auto;
+	padding:5px;
+}
+#browser iframe {
+	width:92%;
+	height:90%;
+	margin-top:10px;
+	background: white;
+}
+#browser input[type="entry"] {
+	font-size:20px;
+	width:70%;
+	margin:5px;
+}
+#browser button {
+	font-size:20px;
+	width:20%;
+	margin:5px;
+}
+    </style>
+    <script>
+var fcs = ["#A4C400","#008A00","#60A917","#00ABA9",   // lime, green, emerald, teal [0-3]
+			"#1BA1E2","#0050EF","#6A00FF","#AA00FF",  // cyan, cobalt, indigo, violet [4-7]
+			"#F472D0","#D80073","#A20025","#E51400",  // pink, magenta, crimson, red [8-11]
+			"#FA6800","#F0A30A","#E3C800","#825A2C",  // orange, amber, yellow, brown [12-15]
+			"#6D8764","#647687","#76608A","#87794E"]; // olive, steel, mauve, taupe [16-19]
+function random(from,to,step = 1) {
+  return from+Math.floor(Math.random()*(to-from)*1/step)*step
+}
+
+function map(n,f1,t1,f2,t2) {
+  return (n/(t1-f1))*(t2-f2)+f2
+}
+    </script>
+    <script src = "js_files/dom.js"></script>
+    <script src = "js_files/menu.js"></script>
+    <script src = "js_files/contact.js"></script>
+    <script src = "js_files/call.js"></script>
+    <script src = "js_files/clock.js"></script>
+    <script src = "js_files/explorer.js"></script>
+    <!--<script src = "td_shooter.js"></script>-->
+    <script src = "js_files/music.js"></script>
+    <script src = "js_files/calculator.js"></script>
+  </head>
+  <body>
+  <canvas oncontextmenu="return false;" id="mycanvas"></canvas><br>
+  <div id="controls">
+  <button onclick="currentApp=menu;scrolled=30"><img id="back" src="appbar.buttons.back.png"></img></button>
+  <button onclick="currentApp=runApps;scrolled=30"><img id="home" src="appbar.buttons.windows.png"></img></button>
+  <button><img id="search" src="appbar.buttons.search.png"></img></button>
+  </div>
+  <div id="browser">
+  	<input type="entry" id="http" onkeydown="return checkSubmit(event)" value="http://www.bing.com" placeholder="Type any website here.."/><button>&#8635;</button>
+  	<iframe id="browserFrame" src="http://www.bing.com"></iframe>
+  </div>
+  <script>
+var canvas = document.getElementById("mycanvas");
+var ctx = canvas.getContext("2d");
+canvas.width = WIDTH = 480;
+canvas.height = HEIGHT = 800;
+var startTime = new Date();
+var GMT = 0;
+var transX = 0;
+var transY = 0;
+var mouseX;
+var mouseY;
+var currentApp = menu;
+var runningApps = [menu];
+var scrolled = 30;
+
+var toasts = [];
+
+function checkSubmit(e)
+{
+   if(e && e.keyCode == 13)
+   {
+   	  var webpage = document.getElementById("http").value;
+   	  if(webpage.indexOf("www.youtube.com") >= 0)
+   	  	webpage = "http://www.youtube.com/embed/"+webpage.split("=")[1];
+   	  if(webpage.indexOf('http://') >= 0) 
+	      document.getElementById("browserFrame").src = webpage;
+	  else
+	  	  document.getElementById("browserFrame").src = "http://"+webpage;
+   }
+}
+
+var hbuttons = [document.getElementById("search"),document.getElementById("home"),document.getElementById("back")];
+
+var runApps = {
+	name:"runApps",
+	appColor: "rgba(0,0,0,0)",
+	mousePressed:function(event) {
+		if(event.button == 0 && mouseX > 20 && mouseX < 460) {
+			for(var i = 0; i< runningApps.length;i++) {
+				if(mouseY > i*85+140+80 && mouseY < i*85+220+80) {
+					currentApp = runningApps[i];
+					scrolled = 30;
+					break;
+				}
+			}
+		}
+		if(event.button == 2 && mouseX > 20 && mouseX < 460) {
+			for(var i = 0; i< runningApps.length;i++) {
+				if(mouseY > i*85+140+80 && mouseY < i*85+220+80) {
+					if(runningApps[i].reset){runningApps[i].reset();}
+					runningApps.splice(i,1);
+					break;
+				}
+			}
+		}
+	},
+	display:function() {
+	ctx.font = "60px SegoeWP";
+	ctx.fillStyle = "white";
+	ctx.fillText("Running apps:",30,140);
+	for(var i = 0;i<runningApps.length;i++) {
+		ctx.fillStyle = "white";
+		ctx.font = "40px SegoeWP";
+		ctx.fillText(runningApps[i].name,30,i*85+200+80);
+		ctx.strokeStyle = "white";
+		ctx.strokeRect(20,i*85+140+80,440,80);
+	}
+}
+	}	
+
+function checkTime(i) {
+    return (i < 10) ? "0" + i : i;
+}
+
+var batteryImage = new Image();
+batteryImage.src = "icons/appbar.battery.charging.png";
+
+var connectionWifi = new Image();
+connectionWifi.src = "icons/appbar.connection.wifi.variant.png";
+
+var connectionSignal = new Image();
+connectionSignal.src = "icons/appbar.connection.quality.medium.png";
+
+function isHover(x,y,w,h) {
+	if(mouseX < x+w && mouseX > x && mouseY < y+h && mouseY > y) {
+		return true;
+	}
+	return false;
+}
+
+canvas.addEventListener("mousemove",updateMouse,false);
+canvas.addEventListener("mousedown",mouseDown,false);
+canvas.addEventListener("mouseup",mousePressed,false);
+document.addEventListener("mousewheel", scroll, false);
+document.addEventListener("DOMMouseScroll", scroll, false);
+
+function mouseDown(evt){
+	if(currentApp.mouseDown){
+		currentApp.mouseDown(evt);	
+	}
+}
+
+function mousePressed(evt) {
+	currentApp.mousePressed(evt);
+}
+
+
+function scroll(event) {
+	var wheel = event.wheelDelta/120 || -event.detail/2;
+	if ((scrolled <= 30 && scrolled >= -maxy)) {
+		scrolled += wheel*20;
+	}
+	if((scrolled > 30 && wheel<0)) {
+		scrolled += wheel*20;
+	}
+	if((scrolled < -maxy && wheel>0)) {
+		scrolled += wheel*20;
+	}
+}
+
+function updateMouse(event) {
+	var rect = canvas.getBoundingClientRect();
+	mouseX = event.clientX - rect.left;
+	mouseY = event.clientY - rect.top;
+}
+
+
+function draw_bg(color) {
+  ctx.save();
+  ctx.fillStyle = color;
+  ctx.fillRect(-transX,-transY,WIDTH,HEIGHT);
+  ctx.restore();
+}
+var frames = 0;
+var h = 0;
+var m = 0;
+function update() {
+	canvas.style.cursor = "initial";
+	var d1 = new Date();
+	var today = new Date( d1.getUTCFullYear(), d1.getUTCMonth(), d1.getUTCDate(), d1.getUTCHours()+GMT, d1.getUTCMinutes(), d1.getUTCSeconds() );
+    var h = checkTime(today.getHours()),
+    m = checkTime(today.getMinutes());
+	draw_bg("black");
+	if(currentApp == menu) {if(runningApps.indexOf(menu)<0) {runningApps.push(menu);};appColor = "rgba(0,0,0,0)";scrolledMenu = scrolled;};
+	if(currentApp == contacter) {scrolledCont = scrolled;};
+	if(currentApp != explorer) {document.getElementById("browser").style.display="none";}
+	ctx.save();	
+	currentApp.display();
+	ctx.restore();
+	ctx.fillStyle = currentApp.appColor;
+	ctx.fillRect(0,0,480,40);
+	ctx.fillStyle = "white";
+	ctx.drawImage(connectionSignal,20,-5,45,45);
+	ctx.drawImage(connectionWifi,70,-5,45,45);
+	ctx.drawImage(batteryImage,350,-10,60,60);
+	ctx.font = "25px SegoeWP";
+	ctx.fillText(h+":"+m,410,30);
+	if(clock_stopwatch_started){clock_stopwatch_time+=1/60;}
+	if(toasts[0]){
+		toasts[0].display();
+	}
+	frames++;
+}
+ctx.fillRect(0,0,WIDTH,HEIGHT);
+ctx.textAlign = "center";
+ctx.fillStyle = "white";
+ctx.font = "50px SegoeWP";
+ctx.fillText("Loading.. Please Wait",240,425);
+ctx.textAlign = "start";
+window.onload = function(){
+var loop = setInterval(update,1000/60);
+}
+  </script>
+  </body>
+</html>
